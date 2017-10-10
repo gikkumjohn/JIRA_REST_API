@@ -14,6 +14,7 @@ try {
     $response = Invoke-RestMethod -Uri $requestUri -Method Get -Headers $headers -ContentType 'application/json'
     Write-Output "ID: $($response.id)"
     Write-Output "Key: $($response.key)"
+    Write-Output "Acceptance Criteria: $($response.fields.customfield_15500)"
        
 }
 catch {
