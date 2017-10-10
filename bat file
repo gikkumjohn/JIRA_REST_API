@@ -1,0 +1,11 @@
+powershell.exe D:\TestScript.ps1
+
+pause
+
+
+*******************
+
+Set execution policy of Powershell 
+1. Run as administrator
+2. Get-ExecutionPolicy
+3. Set-ExecutionPolicy RemoteSigned
