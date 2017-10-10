@@ -11,3 +11,24 @@ curl -D- -k -u gikku.john:password -X PUT --data @data.txt -H "Content-Type: app
        "customfield_15500":"Text change"
    }
 }
+
+
+*******************************
+
+curl -D- -u gikku.john:password -X POST --data @data.txt -H "Content-Type: application/json" https://zafinworks.atlassian.net/rest/api/latest/issue/
+
+{
+    "fields": {
+       "project":
+       { 
+          "key": "TP"
+       },
+       "summary": "Testing REST API",
+       "description": "Creating of an issue using REST API",
+       "issuetype": {
+          "name": "Task"
+       }
+   }
+}
+
+***************************
