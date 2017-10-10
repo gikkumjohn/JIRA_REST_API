@@ -1,0 +1,53 @@
+Viewing an already created issue
+
+[string] $target = "https://zafinworks.atlassian.net"
+[string] $username = "gikku.john"
+[string] $password = "password"
+  
+
+try {
+    $basicAuth = "Basic " + [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($username):$password"))
+    $headers = @{
+        "Authorization" = $basicAuth        
+    }
+    $requestUri = "$target/rest/api/latest/issue/TP-37"
+    $response = Invoke-RestMethod -Uri $requestUri -Method Get -Headers $headers -ContentType 'application/json'
+    Write-Output "ID: $($response.id)"
+    Write-Output "Key: $($response.key)"
+       
+}
+catch {
+    Write-Warning "Remote Server Response: $($_.Exception.Message)"
+    Write-Output "Status Code: $($_.Exception.Response.StatusCode)"
+}
+
+*******************************************
+
+Creating a new issue
+
+[string] $target = "https://zafinworks.atlassian.net"
+[string] $username = "gikku.john"
+[string] $password = "AdamJoan*2017#"
+[string] $projectKey = "TP";
+[string] $issueType = "Story"
+[string] $summary = "Test REST"
+[string] $description = "Test Issue"
+[String] $customfield_15500 = "Acceptance Criteria"
+  
+[string] $body = "{`"fields`":{`"project`":{`"key`":`"$projectKey`"},`"issuetype`":{`"name`":`"$issueType`"},`"summary`":`"$summary`",`"description`":`"$description`",`"customfield_15500`":`"$customfield_15500`"}}"
+  
+try {
+    $basicAuth = "Basic " + [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($username):$password"))
+    $headers = @{
+        "Authorization" = $basicAuth        
+    }
+    $requestUri = "$target/rest/api/latest/issue"
+    $response = Invoke-RestMethod -Uri $requestUri -Method POST -Headers $headers -Body $body  -ContentType 'application/json'
+    Write-Output "ID: $($response.id)"
+    Write-Output "Key: $($response.key)"
+    Write-Output "Self: $($response.self)"    
+}
+catch {
+    Write-Warning "Remote Server Response: $($_.Exception.Message)"
+    Write-Output "Status Code: $($_.Exception.Response.StatusCode)"
+}
