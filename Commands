@@ -1,0 +1,13 @@
+Commands:
+
+curl -u gikku.john:password https://zafinworks.atlassian.net/rest/api/latest/issue/TP-37
+
+curl -D- -k -u gikku.john:password -X PUT --data @data.txt -H "Content-Type: application/json" https://zafinworks.atlassian.net/rest/api/latest/issue/TP-37
+
+***************************
+
+{
+   "fields": {
+       "customfield_15500":"Text change"
+   }
+}
