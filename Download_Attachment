@@ -1,0 +1,25 @@
+[string] $target = "https://zafinworks.atlassian.net"
+[string] $username = "gikku.john"
+[string] $password = "password"
+  
+
+try {
+    $basicAuth = "Basic " + [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($username):$password"))
+    $headers = @{
+        "Authorization" = $basicAuth        
+    }
+    $requestUri = "$target/rest/api/latest/issue/TP-37"
+    $response = Invoke-RestMethod -Uri $requestUri -Method Get -Headers $headers -ContentType 'application/json'
+    
+    Write-Output "ID: $($response.id)"
+    Write-Output "Key: $($response.key)"
+    Write-Output "Acceptance Criteria: $($response.fields.customfield_15500)"
+	  Write-Output "Attachment id: $($response.fields.attachment.id)"
+        
+    Invoke-WebRequest -Uri $($response.fields.attachment.content) -OutFile "D:\$($response.fields.attachment.filename)" -Headers $headers  
+    
+}
+catch {
+    Write-Warning "Remote Server Response: $($_.Exception.Message)"
+    Write-Output "Status Code: $($_.Exception.Response.StatusCode)"
+}
