@@ -28,7 +28,7 @@ Creating a new issue
 
 [string] $target = "https://zafinworks.atlassian.net"
 [string] $username = "gikku.john"
-[string] $password = "AdamJoan*2017#"
+[string] $password = "password"
 [string] $projectKey = "TP";
 [string] $issueType = "Story"
 [string] $summary = "Test REST"
