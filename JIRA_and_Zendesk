@@ -1,0 +1,38 @@
+[string] $jtarget = "https://zafinworks.atlassian.net"
+[string] $jusername = "gikku.john"
+[string] $jpassword = "password"
+
+[string] $ztarget = "https://zafinlabs.zendesk.com"
+[string] $zusername = "gikku.john@zafin.com"
+[string] $zpassword = "password"
+
+try {
+    
+    $jbasicAuth = "Basic " + [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($jusername):$jpassword"))
+    $jheaders = @{    
+        "Authorization" = $jbasicAuth        
+        }
+    
+    $jrequestUri = "$jtarget/rest/api/latest/issue/SPS-1269"    
+    $jresponse = Invoke-RestMethod -Uri $jrequestUri -Method Get -Headers $jheaders -ContentType 'application/json'
+    $zendeskid = $($jresponse.fields.customfield_10120)
+
+    $zbasicAuth = "Basic " + [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($zusername):$zpassword"))
+    $zheaders = @{    
+                "Authorization" = $zbasicAuth        
+                }
+    
+    $zrequestUri = "$ztarget/api/v2/tickets/$zendeskid.json"    
+    $zresponse = Invoke-RestMethod -Uri $zrequestUri -Method Get -Headers $zheaders -ContentType 'application/json'
+    
+    Write-Output "JIRA"
+    Write-Output "Key: $($jresponse.key) Status: $($jresponse.fields.status.name)"
+    Write-Output ""
+    Write-Output "Zendesk"
+    Write-Output "ID: $($zresponse.ticket.id) Type: $($zresponse.ticket.type) Status: $($zresponse.ticket.status)"
+}
+
+catch {
+    Write-Warning "Remote Server Response: $($_.Exception.Message)"
+    Write-Output "Status Code: $($_.Exception.Response.StatusCode)"
+}
