@@ -1,0 +1,40 @@
+[string] $target = "https://zafinworks.atlassian.net"
+[string] $username = "gikku.john"
+[string] $password = "password"
+
+try {
+    $issuekeys = (Read-host "JIRA Issue key(s) separated by comma").Split(',') | ForEach-Object { $_.Trim() }
+    foreach ($issuekey in $issuekeys) {   
+        Write-Output " "
+        $basicAuth = "Basic " + [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($username):$password"))
+        $headers = @{    
+            "Authorization" = $basicAuth        
+            }
+    
+        $requestUri = "$target/rest/api/latest/issue/$issuekey"    
+        $response = Invoke-RestMethod -Uri $requestUri -Method Get -Headers $headers -ContentType 'application/json'
+    
+        Write-Output "ID: $($response.id)"
+        Write-Output "Key: $($response.key)"
+        Write-Output "Status: $($response.fields.status.name)"
+        #Write-Output "Acceptance Criteria: $($response.fields.customfield_15500)" 
+        $attachmentcount = $($response.fields.attachment.Count)    
+
+        if ($attachmentcount -eq 0){
+            Write-Warning "No Attachments found"
+        }
+        else{
+            Write-Output "No of attachments : $($attachmentcount)"
+        
+            $response.fields.attachment | ForEach-Object {
+                Invoke-WebRequest -Uri $($_.content) -OutFile "D:\$($_.filename)" -Headers $headers 
+                Write-Output "File '$($_.filename)' downloaded to D drive."
+                Write-Output " "
+                }        
+            }      
+        } 
+    }
+catch {
+    Write-Warning "Remote Server Response: $($_.Exception.Message)"
+    Write-Output "Status Code: $($_.Exception.Response.StatusCode)"
+}
