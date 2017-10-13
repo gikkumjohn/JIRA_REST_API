@@ -28,9 +28,9 @@ try {
         
             $response.fields.attachment | ForEach-Object {
                 Invoke-WebRequest -Uri $($_.content) -OutFile "D:\$($_.filename)" -Headers $headers 
-                Write-Output "File '$($_.filename)' downloaded to D drive."
-                Write-Output " "
+                Write-Output "File '$($_.filename)' downloaded to D drive."                
                 }        
+            Write-Output " "    
             }      
         } 
     }
