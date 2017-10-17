@@ -1,0 +1,76 @@
+[string] $jtarget = "https://zafinworks.atlassian.net"
+[string] $jusername = "gikku.john"
+[string] $jpassword = "password"
+
+[string] $ztarget = "https://zafinlabs.zendesk.com"
+[string] $zusername = "gikku.john@zafin.com"
+[string] $zpassword = "password"
+
+try {
+
+    $jbasicAuth = "Basic " + [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($jusername):$jpassword"))
+    $jheaders = @{    
+        "Authorization" = $jbasicAuth        
+        }
+
+    $zbasicAuth = "Basic " + [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($zusername):$zpassword"))
+    $zheaders = @{    
+        "Authorization" = $zbasicAuth        
+        }
+
+    $jrequestUri = "$jtarget/rest/api/latest/filter/40302"
+    $filterdetails = Invoke-RestMethod -Uri $jrequestUri -Method Get -Headers $jheaders -ContentType 'application/json'
+    $searchjqlurl = $($filterdetails.searchUrl)
+        
+    $issuelist = Invoke-RestMethod -Uri $searchjqlurl -Method Get -Headers $jheaders -ContentType 'application/json'
+	$issuecount = $($issuelist.issues.Count)
+    Write-Output "Total $issuecount issues created from yesterday."
+	
+	if($issuecount -eq 0){
+		Write-Output "No issues found"
+	}
+	
+	else {
+
+		foreach ($issue in $issuelist) {        
+			$issuekeylist = $($issue.issues.key)
+			$issuekeys = ($issuekeylist.Split(',') | ForEach-Object { $_.Trim() })
+
+			foreach ($issuekey in $issuekeys) {  
+            
+				$jrequestUri = "$jtarget/rest/api/latest/issue/$issuekey"    
+				$jresponse = Invoke-RestMethod -Uri $jrequestUri -Method Get -Headers $jheaders -ContentType 'application/json'
+				$zendeskid = $($jresponse.fields.customfield_10120)
+
+				$zrequestUri = "$ztarget/api/v2/tickets/$zendeskid.json"    
+				$zresponse = Invoke-RestMethod -Uri $zrequestUri -Method Get -Headers $zheaders -ContentType 'application/json'
+    
+				Write-Output ""
+				Write-Output "JIRA Key: $($jresponse.key) # JIRA Status: $($jresponse.fields.status.name) || RC status in JIRA : $($jresponse.fields.customfield_15000.value)"            
+				Write-Output "Zendesk ID: $($zresponse.ticket.id) # Type: $($zresponse.ticket.type) || Status: $($zresponse.ticket.status)"
+				
+				if($($jresponse.fields.customfield_15000.value) -eq $($zresponse.ticket.status)){
+					Write-Output "Status matching"
+				}
+				else{
+					Write-Warning "Status mismatch"
+					
+					if($($zresponse.ticket.status) -eq "new") {$data = '{"fields":{"customfield_15000":{"id":"13100"}}}'}
+					if($($zresponse.ticket.status) -eq "open") {$data = '{"fields":{"customfield_15000":{"id":"13101"}}}'}
+					if($($zresponse.ticket.status) -eq "pending") {$data = '{"fields":{"customfield_15000":{"id":"13103"}}}'}
+					if($($zresponse.ticket.status) -eq "hold") {$data = '{"fields":{"customfield_15000":{"id":"13102"}}}'}
+					if($($zresponse.ticket.status) -eq "solved") {$data = '{"fields":{"customfield_15000":{"id":"13104"}}}'}
+					if($($zresponse.ticket.status) -eq "closed") {$data = '{"fields":{"customfield_15000":{"id":"13105"}}}'}
+					
+					$sresponse = Invoke-RestMethod -Uri $jrequestUri -Method Put -Body $data -Headers $jheaders -ContentType 'application/json'
+					Write-Output "RC Status field updated for $($issuekey)"
+
+				}
+			}
+		}
+	}
+}
+catch {
+    Write-Warning "Remote Server Response: $($_.Exception.Message)"
+    Write-Output "Status Code: $($_.Exception.Response.StatusCode)"
+}
