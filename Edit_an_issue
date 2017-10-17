@@ -1,0 +1,28 @@
+[string] $jtarget = "https://zafinworks.atlassian.net"
+[string] $jusername = "gikku.john"
+[string] $jpassword = "password"
+
+try {
+
+    $jbasicAuth = "Basic " + [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($jusername):$jpassword"))
+    $jheaders = @{    
+        "Authorization" = $jbasicAuth        
+        }
+
+    $jrequestUri = "$jtarget/rest/api/latest/issue/TP-43"
+    $data = '{"fields":
+                {"customfield_15000":{"id":"13102"}
+            }
+    }'
+
+    $filterdetails = Invoke-RestMethod -Uri $jrequestUri -Method Put -Body $data -Headers $jheaders -ContentType 'application/json'
+
+    Write-Output "$filterdetails"
+
+
+
+}
+catch {
+    Write-Warning "Remote Server Response: $($_.Exception.Message)"
+    Write-Output "Status Code: $($_.Exception.Response.StatusCode)"
+}
