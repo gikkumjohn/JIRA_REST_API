@@ -1,0 +1,37 @@
+[string] $target = "https://zafinworks.atlassian.net"
+[string] $username = "gikku.john"
+[string] $password = "password"
+
+try {
+    $basicAuth = "Basic " + [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($username):$password"))
+    $headers = @{    
+        "Authorization" = $basicAuth        
+        }
+    
+    $requestUri = "$target/rest/api/latest/filter/40302"
+    $filterdetails = Invoke-RestMethod -Uri $requestUri -Method Get -Headers $headers -ContentType 'application/json'
+    $searchjqlurl = $($filterdetails.searchUrl)
+
+    #$requestUri = "$target/rest/api/latest/search?jql=project%20%3D%20TP%20AND%20created%20>%3D%20startOfMonth()"
+    $issuelist = Invoke-RestMethod -Uri $searchjqlurl -Method Get -Headers $headers -ContentType 'application/json'
+
+    foreach ($issue in $issuelist) {
+        Write-Output "Key: $($issue.issues.key)"
+        $issuekeylist = $($issue.issues.key)
+        $issuekeys = ($issuekeylist.Split(',') | ForEach-Object { $_.Trim() })
+
+        foreach ($issuekey in $issuekeys) {   
+            Write-Output " "
+                
+            $requestUri = "$target/rest/api/latest/issue/$issuekey"    
+            $response = Invoke-RestMethod -Uri $requestUri -Method Get -Headers $headers -ContentType 'application/json'
+    
+            Write-Output "ID: $($response.id)"
+            Write-Output "Key: $($response.key)"
+        }
+    }
+}
+catch {
+    Write-Warning "Remote Server Response: $($_.Exception.Message)"
+    Write-Output "Status Code: $($_.Exception.Response.StatusCode)"
+}
